@@ -1,0 +1,1566 @@
+<!DOCTYPE html>
+<!-- saved from url=(0044)file:///C:/Users/hp/Downloads/AlgoQuest.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AlgoQuest - The Algorithmic Dungeon</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --bg: #0a0e1a;
+    --bg2: #12182b;
+    --panel: #1a2140;
+    --panel-light: #252d52;
+    --accent: #ffd54a;
+    --accent2: #ff7849;
+    --cyan: #4ddbff;
+    --green: #6ee787;
+    --red: #ff5566;
+    --purple: #b57bff;
+    --text: #e8ecf8;
+    --dim: #7a829d;
+    --border: #2d3866;
+  }
+  body {
+    font-family: 'Courier New', monospace;
+    background: radial-gradient(ellipse at top, #1a2140 0%, #0a0e1a 70%);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    padding: 20px;
+  }
+  .game {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: var(--bg2);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 0 40px rgba(77, 219, 255, 0.15);
+    overflow: hidden;
+  }
+  /* HEADER */
+  .header {
+    background: linear-gradient(135deg, #1a2140 0%, #252d52 100%);
+    padding: 20px 28px;
+    border-bottom: 2px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+  .logo {
+    font-size: 24px;
+    font-weight: bold;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 2px;
+  }
+  .hero-stats {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    font-size: 13px;
+  }
+  .stat {
+    background: var(--panel);
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+  .stat .label { color: var(--dim); margin-right: 6px; font-size: 11px; }
+  .stat .hp-val { color: var(--red); }
+  .stat .gold-val { color: var(--accent); }
+  .stat .score-val { color: var(--green); }
+  .stat .rooms-val { color: var(--cyan); }
+
+  /* MAIN */
+  .main {
+    padding: 28px;
+    min-height: 550px;
+  }
+  h1, h2 { letter-spacing: 1px; margin-bottom: 15px; }
+  h2 { color: var(--accent); font-size: 22px; }
+
+  /* MENU SCREEN */
+  .screen { animation: fadeIn 0.4s ease; }
+  @keyframes fadeIn { from {opacity:0; transform:translateY(10px);} to {opacity:1; transform:none;} }
+
+  .intro-art {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  .intro-art pre {
+    color: var(--cyan);
+    font-size: 11px;
+    line-height: 1.2;
+    display: inline-block;
+    text-align: left;
+    text-shadow: 0 0 10px rgba(77,219,255,0.4);
+  }
+  .tagline {
+    text-align: center;
+    color: var(--dim);
+    margin-top: 10px;
+    font-size: 14px;
+  }
+  .tagline b { color: var(--accent); }
+
+  .rooms-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+  }
+  .room-card {
+    background: var(--panel);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 18px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .room-card:hover:not(.completed) {
+    border-color: var(--accent);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(255, 213, 74, 0.2);
+  }
+  .room-card.completed {
+    opacity: 0.5;
+    border-color: var(--green);
+    cursor: not-allowed;
+  }
+  .room-card.completed::after {
+    content: "✓ CLEARED";
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    color: var(--green);
+    font-size: 11px;
+    font-weight: bold;
+  }
+  .room-num {
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: bold;
+  }
+  .room-name {
+    font-size: 17px;
+    margin: 6px 0;
+    color: var(--text);
+  }
+  .room-algo {
+    font-size: 12px;
+    color: var(--cyan);
+    margin-bottom: 4px;
+  }
+  .room-approach {
+    font-size: 11px;
+    color: var(--dim);
+  }
+
+  /* BUTTONS */
+  .btn {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+    color: #1a1a2e;
+    border: none;
+    padding: 10px 20px;
+    font-family: inherit;
+    font-weight: bold;
+    font-size: 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin: 4px;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(255,213,74,0.3); }
+  .btn:active { transform: translateY(0); }
+  .btn.secondary {
+    background: var(--panel-light);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn.danger {
+    background: linear-gradient(135deg, var(--red), #cc3344);
+    color: white;
+  }
+  .btn.small { padding: 6px 12px; font-size: 12px; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* ROOM INFO */
+  .room-info {
+    background: rgba(77,219,255,0.08);
+    border-left: 3px solid var(--cyan);
+    padding: 10px 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    font-size: 13px;
+  }
+  .room-info b { color: var(--cyan); }
+
+  /* MAZE */
+  .maze-grid {
+    display: grid;
+    gap: 2px;
+    background: #000;
+    padding: 4px;
+    border-radius: 6px;
+    justify-content: center;
+    margin: 20px auto;
+    max-width: fit-content;
+  }
+  .maze-row { display: flex; gap: 2px; }
+  .cell {
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: bold;
+    border-radius: 3px;
+    transition: all 0.15s;
+  }
+  .cell.wall { background: linear-gradient(135deg, #2c3e5c, #1a2440); }
+  .cell.path { background: #1a1f30; color: var(--dim); }
+  .cell.player { background: var(--accent); color: #000; animation: pulse 1s infinite; }
+  .cell.exit { background: var(--green); color: #000; }
+  .cell.solution { background: #2d4d66; color: var(--cyan); }
+  .cell.dfs-visited { background: #3d2d66; color: var(--purple); font-size: 14px; }
+  .cell.visited-trail { background: #1f2a3d; box-shadow: inset 0 0 4px rgba(110,231,135,0.15); }
+  @keyframes pulse { 50% { box-shadow: 0 0 15px var(--accent); } }
+
+  .controls {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 15px 0;
+  }
+  .dpad {
+    display: grid;
+    grid-template-columns: repeat(3, 45px);
+    grid-template-rows: repeat(3, 45px);
+    gap: 4px;
+    margin: 0 auto;
+    width: fit-content;
+  }
+  .dpad button {
+    font-size: 20px;
+    background: var(--panel-light);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .dpad button:hover { background: var(--accent); color: #000; }
+  .dpad .up { grid-column: 2; grid-row: 1; }
+  .dpad .left { grid-column: 1; grid-row: 2; }
+  .dpad .right { grid-column: 3; grid-row: 2; }
+  .dpad .down { grid-column: 2; grid-row: 3; }
+
+  /* KNAPSACK */
+  .treasure-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+    margin: 15px 0;
+  }
+  .treasure {
+    background: var(--panel);
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .treasure:hover { border-color: var(--accent); }
+  .treasure.picked { background: rgba(110, 231, 135, 0.15); border-color: var(--green); }
+  .treasure-name { font-weight: bold; }
+  .treasure-meta { font-size: 11px; color: var(--dim); margin-top: 3px; }
+  .treasure-meta .gold { color: var(--accent); }
+  .treasure-meta .weight { color: var(--purple); }
+
+  .capacity-bar {
+    height: 22px; background: var(--panel); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; margin: 10px 0;
+  }
+  .capacity-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--green), var(--accent));
+    transition: width 0.3s;
+    display: flex; align-items: center; padding-left: 8px;
+    font-size: 11px; color: #000; font-weight: bold;
+  }
+  .capacity-fill.over { background: var(--red); }
+
+  /* BRIDGE */
+  .islands-canvas {
+    background: #0a1122;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin: 10px auto;
+    display: block;
+    max-width: 760px;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 720 / 400;
+  }
+  .edges-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 8px;
+    margin: 15px 0;
+  }
+  .edge-item {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.15s;
+  }
+  .edge-item:hover { border-color: var(--accent); }
+  .edge-item.picked { background: rgba(110, 231, 135, 0.15); border-color: var(--green); }
+  .edge-cost { color: var(--accent); font-weight: bold; float: right; }
+
+  /* CHESS */
+  .chess-board {
+    display: grid;
+    grid-template-columns: repeat(4, 60px);
+    gap: 3px;
+    background: #000;
+    padding: 6px;
+    border-radius: 6px;
+    width: fit-content;
+    margin: 20px auto;
+  }
+  .chess-cell {
+    width: 60px; height: 60px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px; font-weight: bold;
+    background: var(--panel);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s;
+  }
+  .chess-cell:hover:not(.filled) { background: var(--panel-light); }
+  .chess-cell.dark { background: #2a3555; }
+  .chess-cell.x { color: var(--green); text-shadow: 0 0 10px var(--green); }
+  .chess-cell.o { color: var(--red); text-shadow: 0 0 10px var(--red); }
+  .chess-cell.filled { cursor: not-allowed; }
+
+  /* SORTING */
+  .scrolls-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin: 20px 0;
+    flex-wrap: wrap;
+  }
+  .scroll {
+    width: 70px;
+    padding: 12px 8px;
+    background: var(--panel);
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    text-align: center;
+    cursor: grab;
+    transition: all 0.3s;
+  }
+  .scroll.selected { border-color: var(--accent); transform: translateY(-5px); box-shadow: 0 5px 15px rgba(255,213,74,0.3); }
+  .scroll.pivot { border-color: var(--accent2); background: rgba(255,120,73,0.1); }
+  .scroll.range { border-color: var(--cyan); }
+  .scroll-power { font-size: 22px; font-weight: bold; color: var(--accent); }
+  .scroll-name { font-size: 10px; color: var(--dim); margin-top: 3px; }
+
+  /* LOCK */
+  .lock-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 55px);
+    gap: 3px;
+    justify-content: center;
+    margin: 20px auto;
+    width: fit-content;
+  }
+  .lock-cell {
+    width: 55px; height: 55px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s;
+  }
+  .lock-cell.dark { background: #1a2140; }
+  .lock-cell:hover { background: var(--panel-light); }
+  .lock-cell.rune { background: rgba(181,123,255,0.3); color: var(--purple); text-shadow: 0 0 10px var(--purple); border-color: var(--purple); }
+  .lock-cell.conflict { background: rgba(255,85,102,0.3); border-color: var(--red); }
+
+  /* LOG */
+  .log-box {
+    background: #0a0e1a;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    height: 120px;
+    overflow-y: auto;
+    font-size: 12px;
+    margin-top: 15px;
+  }
+  .log-box .log-entry { margin: 3px 0; }
+  .log-entry.success { color: var(--green); }
+  .log-entry.fail { color: var(--red); }
+  .log-entry.info { color: var(--cyan); }
+  .log-entry.warn { color: var(--accent); }
+
+  /* MODAL */
+  .modal-backdrop {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    animation: fadeIn 0.3s;
+  }
+  .modal {
+    background: var(--bg2);
+    border: 2px solid var(--accent);
+    border-radius: 12px;
+    padding: 30px;
+    max-width: 500px;
+    text-align: center;
+    box-shadow: 0 0 50px rgba(255, 213, 74, 0.3);
+  }
+  .modal h2 { margin-bottom: 15px; }
+  .modal .reward {
+    background: var(--panel);
+    padding: 12px;
+    border-radius: 6px;
+    margin: 15px 0;
+    font-size: 14px;
+  }
+
+  /* LEADERBOARD */
+  .leaderboard {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .lb-entry {
+    background: var(--panel);
+    padding: 10px 15px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .lb-entry.gold { border-color: var(--accent); }
+  .lb-entry.silver { border-color: #c0c0c0; }
+  .lb-entry.bronze { border-color: #cd7f32; }
+  .lb-rank { font-weight: bold; font-size: 18px; width: 30px; }
+  .lb-name { flex: 1; padding-left: 10px; }
+  .lb-score { color: var(--green); font-weight: bold; }
+
+  /* NAME INPUT */
+  .name-input-box {
+    text-align: center;
+    padding: 40px 20px;
+  }
+  .name-input-box input {
+    background: var(--panel);
+    border: 2px solid var(--border);
+    color: var(--text);
+    padding: 12px 16px;
+    font-family: inherit;
+    font-size: 16px;
+    border-radius: 6px;
+    width: 250px;
+    margin: 10px;
+    text-align: center;
+  }
+  .name-input-box input:focus { outline: none; border-color: var(--accent); }
+
+  .hint-box {
+    background: rgba(77,219,255,0.1);
+    border: 1px solid var(--cyan);
+    padding: 10px;
+    border-radius: 4px;
+    margin: 10px 0;
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+<div class="game">
+  <div class="header">
+    <div class="logo">⚔ ALGOQUEST ⚔</div>
+    <div class="hero-stats" id="stats">
+      <div class="stat"><span class="label">HERO</span>mohk</div>
+      <div class="stat"><span class="label">HP</span><span class="hp-val">98/100</span></div>
+      <div class="stat"><span class="label">GOLD</span><span class="gold-val">0</span></div>
+      <div class="stat"><span class="label">SCORE</span><span class="score-val">0</span></div>
+      <div class="stat"><span class="label">ROOMS</span><span class="rooms-val">0/6</span></div>
+    </div>
+  </div>
+  <div class="main" id="main"></div>
+</div>
+
+<script>
+// =====================================================================
+//  ALGOQUEST - Full interactive game
+//  6 algorithms, 9+ data structures, all paradigms from DAA
+// =====================================================================
+
+const Game = {
+  player: null,
+  completed: [false, false, false, false, false, false],
+  leaderboard: [
+    { name: "Gandalf",  score: 920, rooms: 6 },
+    { name: "Lancelot", score: 780, rooms: 6 },
+    { name: "Merlin",   score: 650, rooms: 5 },
+    { name: "Arthur",   score: 540, rooms: 5 },
+    { name: "Frodo",    score: 430, rooms: 4 },
+  ],
+  init() {
+    this.showStartScreen();
+  },
+  updateStats() {
+    if (!this.player) { document.getElementById('stats').innerHTML = ''; return; }
+    const p = this.player;
+    document.getElementById('stats').innerHTML = `
+      <div class="stat"><span class="label">HERO</span>${p.name}</div>
+      <div class="stat"><span class="label">HP</span><span class="hp-val">${p.hp}/${p.maxHp}</span></div>
+      <div class="stat"><span class="label">GOLD</span><span class="gold-val">${p.gold}</span></div>
+      <div class="stat"><span class="label">SCORE</span><span class="score-val">${p.score}</span></div>
+      <div class="stat"><span class="label">ROOMS</span><span class="rooms-val">${p.rooms}/6</span></div>
+    `;
+  },
+  showStartScreen() {
+    document.getElementById('main').innerHTML = `
+      <div class="screen">
+        <div class="intro-art">
+          <pre>
+ █████╗ ██╗      ██████╗  ██████╗  ██████╗ ██╗   ██╗███████╗███████╗████████╗
+██╔══██╗██║     ██╔════╝ ██╔═══██╗██╔═══██╗██║   ██║██╔════╝██╔════╝╚══██╔══╝
+███████║██║     ██║  ███╗██║   ██║██║   ██║██║   ██║█████╗  ███████╗   ██║
+██╔══██║██║     ██║   ██║██║   ██║██║▄▄ ██║██║   ██║██╔══╝  ╚════██║   ██║
+██║  ██║███████╗╚██████╔╝╚██████╔╝╚██████╔╝╚██████╔╝███████╗███████║   ██║
+╚═╝  ╚═╝╚══════╝ ╚═════╝  ╚═════╝  ╚══▀▀═╝  ╚═════╝ ╚══════╝╚══════╝   ╚═╝
+          </pre>
+          <div class="tagline">
+            A Dungeon Crawler Powered by <b>Algorithms</b><br>
+            6 Rooms · 6 Classic Algorithms · 3+ Paradigms
+          </div>
+        </div>
+        <div class="name-input-box">
+          <h2>Enter the Dungeon</h2>
+          <p style="color:var(--dim); margin-bottom:15px;">
+            Long ago, Archmage Turing sealed his secrets in a dungeon of six trials.<br>
+            Each room tests a different form of algorithmic wisdom...
+          </p>
+          <input type="text" id="heroName" placeholder="Your hero name..." maxlength="18" value="Hero">
+          <br>
+          <button class="btn" onclick="Game.startGame()">⚔  BEGIN QUEST  ⚔</button>
+        </div>
+      </div>`;
+    setTimeout(() => document.getElementById('heroName').focus(), 100);
+    document.getElementById('heroName').addEventListener('keydown', e => {
+      if (e.key === 'Enter') Game.startGame();
+    });
+  },
+  startGame() {
+    const name = document.getElementById('heroName').value.trim() || 'Adventurer';
+    this.player = { name, hp: 100, maxHp: 100, gold: 0, score: 0, rooms: 0, inventory: {} };
+    this.completed = [false, false, false, false, false, false];
+    this.updateStats();
+    this.showMenu();
+  },
+  showMenu() {
+    this.updateStats();
+    const rooms = [
+      { num:1, name:"The Haunted Maze",          algo:"BFS / DFS",             approach:"Graph Traversal" },
+      { num:2, name:"The Treasure Vault",        algo:"0/1 Knapsack",          approach:"Dynamic Programming" },
+      { num:3, name:"Bridge of Merchants",       algo:"Kruskal's MST",         approach:"Greedy + DSU" },
+      { num:4, name:"Dark Lord's Chessboard",    algo:"Minimax + α-β pruning", approach:"Game Theory" },
+      { num:5, name:"The Sorting Hall",          algo:"Quick Sort",            approach:"Divide & Conquer" },
+      { num:6, name:"The Arcane Lock",           algo:"N-Queens",              approach:"Backtracking" },
+    ];
+    let grid = rooms.map((r, i) => `
+      <div class="room-card ${this.completed[i] ? 'completed' : ''}" onclick="Game.enterRoom(${i})">
+        <div class="room-num">ROOM ${r.num}</div>
+        <div class="room-name">${r.name}</div>
+        <div class="room-algo">⚡ ${r.algo}</div>
+        <div class="room-approach">${r.approach}</div>
+      </div>
+    `).join('');
+    const allDone = this.completed.every(x => x);
+    document.getElementById('main').innerHTML = `
+      <div class="screen">
+        <h2>Choose Your Trial</h2>
+        <p style="color:var(--dim); margin-bottom:10px; font-size:13px;">
+          Click any uncleared room to enter. Match the optimal algorithm's answer for maximum score.
+        </p>
+        <div class="rooms-grid">${grid}</div>
+        <div style="margin-top:20px; text-align:center;">
+          <button class="btn secondary" onclick="Game.showLeaderboard()">🏆 Leaderboard</button>
+          <button class="btn secondary" onclick="Game.rest()">🛏 Rest (20 gold → +50 HP)</button>
+          ${allDone ? '<button class="btn" onclick="Game.endGame(true)">🎉 Claim Victory!</button>' : ''}
+          <button class="btn danger" onclick="Game.endGame(false)">Quit</button>
+        </div>
+      </div>`;
+  },
+  enterRoom(idx) {
+    if (this.completed[idx]) return;
+    const rooms = [MazeRoom, TreasureRoom, BridgeRoom, ChessRoom, SortingRoom, LockRoom];
+    rooms[idx].start();
+  },
+  completeRoom(idx, scoreGain, goldGain, itemName) {
+    this.completed[idx] = true;
+    this.player.score += scoreGain;
+    this.player.gold += goldGain;
+    this.player.rooms++;
+    if (itemName) this.player.inventory[itemName] = (this.player.inventory[itemName] || 0) + 1;
+    this.updateStats();
+  },
+  rest() {
+    if (this.player.gold < 20) { alert("Not enough gold!"); return; }
+    this.player.gold -= 20;
+    this.player.hp = Math.min(this.player.maxHp, this.player.hp + 50);
+    this.updateStats();
+    this.showMenu();
+  },
+  showLeaderboard() {
+    const sorted = [...this.leaderboard].sort((a,b) => b.score - a.score).slice(0, 10);
+    const entries = sorted.map((e, i) => {
+      const cls = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+      const medal = ['🥇','🥈','🥉'][i] || `#${i+1}`;
+      return `<div class="lb-entry ${cls}">
+        <span class="lb-rank">${medal}</span>
+        <span class="lb-name">${e.name}</span>
+        <span class="lb-score">${e.score}</span>
+        <span style="color:var(--cyan); margin-left:15px;">${e.rooms}/6</span>
+      </div>`;
+    }).join('');
+    document.getElementById('main').innerHTML = `
+      <div class="screen">
+        <h2>🏆 Hall of Heroes</h2>
+        <div class="room-info">
+          Uses <b>Priority Queue (Max-Heap)</b> for ranked scores. Each insertion is O(log n).
+        </div>
+        <div class="leaderboard">${entries}</div>
+        <div style="text-align:center; margin-top:20px;">
+          <button class="btn" onclick="Game.showMenu()">← Back to Menu</button>
+        </div>
+      </div>`;
+  },
+  endGame(won) {
+    this.leaderboard.push({ name: this.player.name, score: this.player.score, rooms: this.player.rooms });
+    const finalScore = won ? this.player.score + 500 : this.player.score;
+    document.getElementById('main').innerHTML = `
+      <div class="screen" style="text-align:center; padding: 40px 20px;">
+        <h1 style="font-size:40px; color:${won?'var(--green)':'var(--dim)'}">
+          ${won ? '★ VICTORY ★' : 'Adventure Ended'}
+        </h1>
+        <p style="margin:20px; color:var(--dim);">
+          ${won ? "You have conquered all six trials! The Archmage's secrets are yours!" : 'Your tale lives on...'}
+        </p>
+        <div class="reward" style="display:inline-block; padding:20px 40px; background:var(--panel); border-radius:8px;">
+          <div style="font-size:14px; color:var(--dim);">FINAL STATS</div>
+          <div style="font-size:28px; color:var(--accent); margin:10px 0;">${finalScore}</div>
+          <div>Hero: <b>${this.player.name}</b></div>
+          <div>Rooms: <b>${this.player.rooms}/6</b></div>
+          <div>Gold: <b style="color:var(--accent)">${this.player.gold}</b></div>
+          ${won ? '<div style="margin-top:10px; color:var(--green);">+500 completion bonus!</div>' : ''}
+        </div>
+        <div style="margin-top:30px;">
+          <button class="btn" onclick="Game.showLeaderboard()">🏆 Leaderboard</button>
+          <button class="btn secondary" onclick="Game.showStartScreen()">New Game</button>
+        </div>
+      </div>`;
+  },
+};
+
+// ==================================================================
+// ROOM 1: THE HAUNTED MAZE - BFS/DFS (Graph, Queue, Stack)
+// ==================================================================
+const MazeRoom = {
+  layout: [
+    "############",
+    "#P..#......#",
+    "#.#.#.####.#",
+    "#.#...#....#",
+    "#.###.#.##.#",
+    "#...#.#.#..#",
+    "###.#.#.#.##",
+    "#.........E#",
+    "############"
+  ],
+  grid: [], pr: 0, pc: 0, er: 0, ec: 0, moves: 0,
+  showHint: false, showDFS: false, visited: null,
+  optimal: [], optimalLen: 0, dfsOrder: [],
+  start() {
+    this.grid = this.layout.map(r => r.split(''));
+    for (let i=0; i<this.grid.length; i++) {
+      for (let j=0; j<this.grid[i].length; j++) {
+        if (this.grid[i][j] === 'P') { this.pr = i; this.pc = j; this.grid[i][j] = '.'; }
+        if (this.grid[i][j] === 'E') { this.er = i; this.ec = j; }
+      }
+    }
+    this.moves = 0;
+    this.showHint = false;
+    this.showDFS = false;
+    this.visited = Array.from({length: this.grid.length}, () =>
+      Array(this.grid[0].length).fill(false));
+    this.visited[this.pr][this.pc] = true;
+    this.optimal = this.bfs();
+    this.optimalLen = this.optimal.length > 1 ? this.optimal.length - 1 : 0;
+    this.dfsOrder = this.dfs();
+    this.render();
+  },
+  // BFS - finds SHORTEST path using a Queue. O(V+E).
+  bfs() {
+    const R = this.grid.length, C = this.grid[0].length;
+    const visited = Array.from({length: R}, () => Array(C).fill(false));
+    const parent = Array.from({length: R}, () => Array(C).fill(null));
+    const queue = [[this.pr, this.pc]];
+    visited[this.pr][this.pc] = true;
+    const dr = [-1, 1, 0, 0], dc = [0, 0, -1, 1];
+    let reached = (this.pr === this.er && this.pc === this.ec);
+    while (queue.length && !reached) {
+      const [r, c] = queue.shift();
+      for (let k=0; k<4; k++) {
+        const nr = r+dr[k], nc = c+dc[k];
+        if (nr>=0 && nr<R && nc>=0 && nc<C && !visited[nr][nc] && this.grid[nr][nc] !== '#') {
+          visited[nr][nc] = true;
+          parent[nr][nc] = [r, c];
+          if (nr === this.er && nc === this.ec) { reached = true; break; }
+          queue.push([nr, nc]);
+        }
+      }
+    }
+    // Guard: if unreachable, return empty so nothing gets highlighted and
+    // optimalLen stays 0 without causing a silent win-impossible state.
+    if (!reached) return [];
+    const path = [];
+    let cur = [this.er, this.ec];
+    while (cur) {
+      path.push(cur);
+      cur = parent[cur[0]][cur[1]];
+    }
+    return path.reverse();
+  },
+  // DFS - finds ANY path (reachability). Uses an explicit Stack. O(V+E).
+  // Returned order is the discovery order, useful for showing how DFS
+  // dives deep down one branch before backtracking.
+  dfs() {
+    const R = this.grid.length, C = this.grid[0].length;
+    const visited = Array.from({length: R}, () => Array(C).fill(false));
+    const stack = [[this.pr, this.pc]];
+    const order = [];
+    const dr = [-1, 1, 0, 0], dc = [0, 0, -1, 1];
+    while (stack.length) {
+      const [r, c] = stack.pop();
+      if (visited[r][c]) continue;
+      visited[r][c] = true;
+      order.push([r, c]);
+      if (r === this.er && c === this.ec) break;
+      for (let k=3; k>=0; k--) {
+        const nr = r+dr[k], nc = c+dc[k];
+        if (nr>=0 && nr<R && nc>=0 && nc<C && !visited[nr][nc] && this.grid[nr][nc] !== '#') {
+          stack.push([nr, nc]);
+        }
+      }
+    }
+    return order;
+  },
+  move(dr, dc) {
+    const nr = this.pr + dr, nc = this.pc + dc;
+    if (nr<0 || nr>=this.grid.length || nc<0 || nc>=this.grid[0].length) return;
+    if (this.grid[nr][nc] === '#') {
+      Game.player.hp = Math.max(0, Game.player.hp - 2);
+      Game.updateStats();
+      this.render("*thud* You bumped a wall! -2 HP", "fail");
+      return;
+    }
+    this.pr = nr; this.pc = nc; this.moves++;
+    this.visited[nr][nc] = true;
+    if (this.pr === this.er && this.pc === this.ec) {
+      const extra = this.moves - this.optimalLen;
+      const bonus = Math.max(0, 50 - extra * 3);
+      const scoreGain = Math.max(0, 100 + bonus - (this.showHint ? 15 : 0));
+      Game.completeRoom(0, scoreGain, 30, "Ancient Map");
+      showModal("★ You reached the exit! ★",
+        `Your moves: <b>${this.moves}</b><br>BFS optimal: <b>${this.optimalLen}</b><br>Efficiency bonus: <b>+${bonus}</b>`,
+        scoreGain, 30, "Ancient Map");
+      return;
+    }
+    this.render();
+  },
+  render(msg = "", msgCls = "info") {
+    const cells = this.grid.map((row, i) =>
+      `<div class="maze-row">${row.map((c, j) => {
+        if (i===this.pr && j===this.pc) return `<div class="cell player">🧙</div>`;
+        if (i===this.er && j===this.ec) return `<div class="cell exit">E</div>`;
+        if (c==='#') return `<div class="cell wall"></div>`;
+        if (this.showHint && this.optimal.some(([r,cc]) => r===i && cc===j))
+          return `<div class="cell solution">·</div>`;
+        if (this.showDFS && this.dfsOrder.some(([r,cc]) => r===i && cc===j))
+          return `<div class="cell dfs-visited">◦</div>`;
+        if (this.visited && this.visited[i][j])
+          return `<div class="cell path visited-trail"></div>`;
+        return `<div class="cell path"></div>`;
+      }).join('')}</div>`
+    ).join('');
+    document.getElementById('main').innerHTML = `
+      <div class="screen">
+        <h2>🗝 Room 1: The Haunted Maze</h2>
+        <div class="room-info">
+          <b>Algorithm:</b> BFS (shortest path) / DFS (reachability)<br>
+          <b>Data Structures:</b> Graph (2D grid), Queue (BFS), Stack (DFS)<br>
+          <b>Time Complexity:</b> O(V + E)
+        </div>
+        <p style="text-align:center; color:var(--dim);">
+          Navigate to <b style="color:var(--green)">E</b>. Arrow keys or buttons. Stay close to BFS's optimal path!
+        </p>
+        <div class="maze-grid">${cells}</div>
+        <div style="text-align:center; margin-top:15px;">
+          <div>Moves: <b>${this.moves}</b> · Optimal (BFS): <b>${this.optimalLen}</b>
+          ${this.optimalLen === 0 ? '<span style="color:var(--red)"> (exit unreachable!)</span>' : ''}</div>
+        </div>
+        <div class="controls">
+          <div class="dpad">
+            <button class="up" onclick="MazeRoom.move(-1,0)">▲</button>
+            <button class="left" onclick="MazeRoom.move(0,-1)">◀</button>
+            <button class="right" onclick="MazeRoom.move(0,1)">▶</button>
+            <button class="down" onclick="MazeRoom.move(1,0)">▼</button>
+          </div>
+        </div>
+        <div style="text-align:center;">
+          <button class="btn secondary" onclick="MazeRoom.toggleHint()">💡 ${this.showHint?'Hide':'Show'} BFS Path (-15 score)</button>
+          <button class="btn secondary" onclick="MazeRoom.toggleDFS()">🔍 ${this.showDFS?'Hide':'Show'} DFS Order</button>
+          <button class="btn danger" onclick="Game.showMenu()">Leave Room</button>
+        </div>
+        ${msg ? `<div class="log-box"><div class="log-entry ${msgCls}">${msg}</div></div>` : ''}
+      </div>`;
+  },
+  toggleHint() { this.showHint = !this.showHint; this.render(); },
+  toggleDFS()  { this.showDFS  = !this.showDFS;  this.render(); }
+};
+
+// Keyboard for maze
+document.addEventListener('keydown', e => {
+  if (document.querySelector('.maze-grid')) {
+    if (e.key === 'ArrowUp' || e.key === 'w') { e.preventDefault(); MazeRoom.move(-1, 0); }
+    if (e.key === 'ArrowDown' || e.key === 's') { e.preventDefault(); MazeRoom.move(1, 0); }
+    if (e.key === 'ArrowLeft' || e.key === 'a') { e.preventDefault(); MazeRoom.move(0, -1); }
+    if (e.key === 'ArrowRight' || e.key === 'd') { e.preventDefault(); MazeRoom.move(0, 1); }
+  }
+});
+
+// ==================================================================
+// ROOM 2: TREASURE VAULT - 0/1 Knapsack (DP Table)
+// ==================================================================
+const TreasureRoom = {
+  items: [
+    { name: "👑 Golden Crown", value: 80, weight: 7 },
+    { name: "💎 Ruby Necklace", value: 60, weight: 4 },
+    { name: "⚔ Silver Sword",  value: 40, weight: 3 },
+    { name: "📜 Ancient Tome",  value: 30, weight: 2 },
+    { name: "💍 Diamond Ring",  value: 50, weight: 1 },
+    { name: "🗿 Jade Statue",   value: 70, weight: 6 },
+    { name: "🏺 Pearl Chalice", value: 45, weight: 3 },
+    { name: "🔮 Mystic Orb",    value: 55, weight: 4 },
+  ],
+  capacity: 12,
+  picked: [],
+  showHint: false,
+  optimal: 0,
+  start() {
+    this.picked = new Array(this.items.length).fill(false);
+    this.showHint = false;
+    this.optimal = this.solve().value;
+    this.render();
+  },
+  // 0/1 Knapsack via DP
+  solve() {
+    const n = this.items.length, W = this.capacity;
+    const dp = Array.from({length: n+1}, () => new Array(W+1).fill(0));
+    for (let i=1; i<=n; i++) {
+      for (let w=0; w<=W; w++) {
+        dp[i][w] = dp[i-1][w];
+        if (this.items[i-1].weight <= w)
+          dp[i][w] = Math.max(dp[i][w], dp[i-1][w-this.items[i-1].weight] + this.items[i-1].value);
+      }
+    }
+    return { value: dp[n][W], dp };
+  },
+  toggle(i) {
+    if (!this.picked[i]) {
+      const w = this.currentWeight() + this.items[i].weight;
+      if (w > this.capacity) { this.render("Too heavy!", "fail"); return; }
+    }
+    this.picked[i] = !this.picked[i];
+    this.render();
+  },
+  currentWeight() { return this.items.reduce((s, it, i) => s + (this.picked[i] ? it.weight : 0), 0); },
+  currentValue()  { return this.items.reduce((s, it, i) => s + (this.picked[i] ? it.value  : 0), 0); },
+  finish() {
+    const myVal = this.currentValue();
+    const ratio = this.optimal ? myVal / this.optimal : 1;
+    const scoreGain = Math.max(0, Math.floor(150 * ratio) - (this.showHint ? 15 : 0));
+    const perfect = myVal === this.optimal;
+    Game.completeRoom(1, scoreGain, myVal, perfect ? "DP Master Token" : null);
+    for (let i=0; i<this.picked.length; i++)
+      if (this.picked[i]) Game.player.inventory[this.items[i].name] = (Game.player.inventory[this.items[i].name] || 0) + 1;
+    showModal(perfect ? "★ PERFECT DP SOLUTION! ★" : "Vault Cleared",
+      `Your haul: <b>${myVal}</b> gold<br>DP optimal: <b>${this.optimal}</b> gold<br>Efficiency: <b>${Math.floor(ratio*100)}%</b>`,
+      scoreGain, myVal, perfect ? "DP Master Token" : null);
+  },
+  render(msg = "", msgCls = "info") {
+    const items = this.items.map((it, i) => `
+      <div class="treasure ${this.picked[i]?'picked':''}" onclick="TreasureRoom.toggle(${i})">
+        <div>
+          <div class="treasure-name">${it.name}</div>
+          <div class="treasure-meta">
+            <span class="gold">💰 ${it.value}</span> ·
+            <span class="weight">⚖ ${it.weight}kg</span>
+          </div>
+        </div>
+        <div style="font-size:20px;">${this.picked[i] ? '✓' : '○'}</div>
+      </div>
+    `).join('');
+    const w = this.currentWeight();
+    const pct = (w / this.capacity) * 100;
+    document.getElementById('main').innerHTML = `
+      <div class="screen">
+        <h2>💰 Room 2: The Treasure Vault</h2>
+        <div class="room-info">
+          <b>Algorithm:</b> 0/1 Knapsack (Dynamic Programming)<br>
+          <b>Data Structure:</b> 2D DP Table (n × W)<br>
+          <b>Time Complexity:</b> O(n·W) = O(${this.items.length * this.capacity})
+        </div>
+        <p style="color:var(--dim);">Pick items to maximize value. Capacity: <b>${this.capacity}kg</b>. Match the DP optimum!</p>
+        <div class="capacity-bar">
+          <div class="capacity-fill ${w>this.capacity?'over':''}" style="width:${Math.min(100,pct)}%">
+            ${w}/${this.capacity} kg  ·  Value: ${this.currentValue()} gold
+          </div>
+        </div>
+        <div class="treasure-grid">${items}</div>
+        ${this.showHint ? `<div class="hint-box">🔮 DP whispers: optimal value = <b>${this.optimal}</b> gold</div>` : ''}
+        <div style="text-align:center; margin-top:15px;">
+          <button class="btn" onclick="TreasureRoom.finish()">📦 Take My Haul</button>
+          <button class="btn secondary" onclick="TreasureRoom.toggleHint()">💡 ${this.showHint?'Hide':'Show'} DP Optimum</button>
+          <button class="btn danger" onclick="Game.showMenu()">Leave Room</button>
+        </div>
+        ${msg?`<div class="log-box"><div class="log-entry ${msgCls}">${msg}</div></div>`:''}
+      </div>`;
+  },
+  toggleHint() { this.showHint = !this.showHint; this.render(); }
+};
+
+// ==================================================================
+// ROOM 3: BRIDGE OF MERCHANTS - Kruskal's MST (DSU)
+// ==================================================================
+const BridgeRoom = {
+  islands: [
+    { name: "Emerald Isle",   x:  90, y:  80, labelDy: -30 },
+    { name: "Ruby Coast",     x: 370, y:  70, labelDy: -30 },
+    { name: "Sapphire Point", x: 650, y:  90, labelDy: -30 },
+    { name: "Gold Harbor",    x: 120, y: 310, labelDy:  35 },
+    { name: "Silver Bay",     x: 390, y: 320, labelDy:  35 },
+    { name: "Obsidian Rock",  x: 660, y: 300, labelDy:  35 },
+  ],
+  edges: [
+    // Each edge has a hand-tuned {t, perp} so the 12 cost badges never
+    // overlap each other, the nodes, or the name labels.
+    // t    = fraction along edge (0=at u, 1=at v) for the badge anchor
+    // perp = perpendicular offset (px) to push the badge sideways off the line
+    {u:0,v:1,cost:12, t:0.50, perp:  0},
+    {u:0,v:2,cost:25, t:0.35, perp: -6},
+    {u:0,v:3,cost:20, t:0.45, perp:  0},
+    {u:1,v:2,cost: 8, t:0.50, perp:  0},
+    {u:1,v:4,cost:15, t:0.30, perp: -8},
+    {u:2,v:3,cost:18, t:0.65, perp:  6},
+    {u:2,v:4,cost:30, t:0.50, perp:  0},
+    {u:3,v:4,cost:10, t:0.50, perp:  0},
+    {u:3,v:5,cost:22, t:0.65, perp:-10},
+    {u:4,v:5,cost:14, t:0.50, perp:  0},
+    {u:1,v:5,cost:35, t:0.70, perp: -6},
+    {u:0,v:5,cost:40, t:0.25, perp:  0}
+  ],
+  chosen: new Set(),
+  showHint: false,
+  optimalCost: 0,
+  start() {
+    this.chosen = new Set();
+    this.showHint = false;
+    this.optimalCost = this.kruskal().cost;
+    this.render();
+  },
+  // Kruskal's MST using DSU
+  kruskal() {
+    const sorted = [...this.edges].map((e,i) => ({...e, idx:i})).sort((a,b) => a.cost - b.cost);
+    const parent = this.islands.map((_, i) => i);
+    const find = x => parent[x] === x ? x : (parent[x] = find(parent[x]));
+    const unite = (a, b) => {
+      const ra = find(a), rb = find(b);
+      if (ra === rb) return false;
+      parent[rb] = ra;
+      return true;
+    };
+    let cost = 0;
+    const mst = [];
+    for (const e of sorted) {
+      if (unite(e.u, e.v)) {
+        mst.push(e.idx);
+        cost += e.cost;
+        if (mst.length === this.islands.length - 1) break;
+      }
+    }
+    return { cost, mst };
+  },
+  toggleEdge(i) {
+    if (this.chosen.has(i)) this.chosen.delete(i);
+    else this.chosen.add(i);
+    this.render();
+  },
+  isConnected() {
+    const parent = this.islands.map((_, i) => i);
+    const find = x => parent[x] === x ? x : (parent[x] = find(parent[x]));
+    for (const i of this.chosen) {
+      const e = this.edges[i];
+      const ra = find(e.u), rb = find(e.v);
+      if (ra !== rb) parent[rb] = ra;
+    }
+    const root = find(0);
+    return this.islands.every((_, i) => find(i) === root);
+  },
+  myCost() { return [...this.chosen].reduce((s, i) => s + this.edges[i].cost, 0); },
+  finish() {
+    if (!this.isConnected()) { this.render("All islands must be connected!", "fail"); return; }
+    const my = this.myCost();
+    const perfect = my === this.optimalCost;
+    const ratio = this.optimalCost / my;
+    const scoreGain = Math.max(0, Math.floor(200 * ratio) - (this.showHint ? 15 : 0));
+    Game.completeRoom(2, scoreGain, 50, perfect ? "Merchant's Seal" : null);
+    showModal(perfect ? "★ PERFECT MST! ★" : "Islands Connected",
+      `Your cost: <b>${my}</b> gold<br>Kruskal optimal: <b>${this.optimalCost}</b> gold`,
+      scoreGain, 50, perfect ? "Merchant's Seal" : null);
+  },
+  render(msg = "", msgCls = "info") {
+    // Draw the island graph as SVG.
+    // Layout notes:
+    //   - Canvas is 720x400. Top row of islands at y~80, bottom row at y~310.
+    //   - Each node carries a labelDy to place its name ABOVE (top row)
+    //     or BELOW (bottom row) so names never sit in the edge-badge zone.
+    //   - Each edge has a {t, perp} pair. `t` slides the cost badge along the
+    //     edge and `perp` nudges it perpendicular to the line, so crossing
+    //     diagonals don't stack their badges on top of each other.
+    let svg = `<svg class="islands-canvas" width="100%" viewBox="0 0 720 400" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
+    // edges (lines first, so badges draw on top)
+    this.edges.forEach((e, i) => {
+      const a = this.islands[e.u], b = this.islands[e.v];
+      const picked = this.chosen.has(i);
+      svg += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"
+        stroke="${picked?'#6ee787':'#2d3866'}" stroke-width="${picked?3:1.5}"
+        ${picked?'':'stroke-dasharray="4,4"'} />`;
+    });
+    // cost badges (drawn after lines, in a second pass so no line crosses over a badge)
+    this.edges.forEach((e, i) => {
+      const a = this.islands[e.u], b = this.islands[e.v];
+      const picked = this.chosen.has(i);
+      const t = e.t, perp = e.perp;
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const L = Math.sqrt(dx*dx + dy*dy) || 1;
+      // perpendicular unit vector, pointing "left" of the edge direction
+      const nx = -dy / L, ny = dx / L;
+      const mx = a.x + dx * t + nx * perp;
+      const my = a.y + dy * t + ny * perp;
+      svg += `<circle cx="${mx}" cy="${my}" r="12"
+        fill="${picked?'#6ee787':'#1a2140'}" stroke="#2d3866" stroke-width="1.5"/>`;
+      svg += `<text x="${mx}" y="${my+4}" text-anchor="middle" font-size="11"
+        fill="${picked?'#000':'#e8ecf8'}" font-weight="bold">${e.cost}</text>`;
+    });
+    // nodes
+    this.islands.forEach((isl, i) => {
+      svg += `<circle cx="${isl.x}" cy="${isl.y}" r="18" fill="#ffd54a" stroke="#ff7849" stroke-width="2"/>`;
+      svg += `<text x="${isl.x}" y="${isl.y+5}" text-anchor="middle" font-weight="bold" font-size="14" fill="#1a1a2e">${i}</text>`;
+      // Name goes above (labelDy negative) for top-row islands, below for bottom-row.
+      svg += `<text x="${isl.x}" y="${isl.y + isl.labelDy}" text-anchor="middle" font-size="11" fill="#e8ecf8">${isl.name}</text>`;
+    });
+    svg += `</svg>`;
+
+    const edgesList = this.edges.map((e, i) => `
+      <div class="edge-item ${this.chosen.has(i)?'picked':''}" onclick="BridgeRoom.toggleEdge(${i})">
+        ${this.chosen.has(i)?'✓':'○'} <b>${this.islands[e.u].name.split(' ')[0]}</b> ↔ <b>${this.islands[e.v].name.split(' ')[0]}</b>
+        <span class="edge-cost">${e.cost}g</span>
+      </div>
+    `).join('');
+    document.getElementById('main').innerHTML = `
+      <div class="screen">
+        <h2>🌉 Room 3: Bridge of Merchants</h2>
+        <div class="room-info">
+          <b>Algorithm:</b> Kruskal's MST (Greedy)<br>
+          <b>Data Structures:</b> Edge List, Disjoint Set Union (DSU) with path compression<br>
+          <b>Time Complexity:</b> O(E log E)
+        </div>
+        <p style="color:var(--dim);">Connect ALL 6 islands with bridges at minimum total cost.</p>
+        ${svg}
+        <div style="text-align:center; margin:10px 0;">
+          Bridges: <b>${this.chosen.size}</b> · My cost: <b style="color:var(--accent)">${this.myCost()}</b>
+          · Connected: <b style="color:${this.isConnected()?'var(--green)':'var(--red)'}">${this.isConnected()?'YES':'NO'}</b>
+        </div>
+        <div class="edges-list">${edgesList}</div>
+        ${this.showHint ? `<div class="hint-box">🔮 Kruskal whispers: optimal MST cost = <b>${this.optimalCost}</b> gold</div>` : ''}
+        <div style="text-align:center; margin-top:15px;">
+          <button class="btn" onclick="BridgeRoom.finish()">🏗 Build Kingdom</button>
+          <button class="btn secondary" onclick="BridgeRoom.toggleHint()">💡 ${this.showHint?'Hide':'Show'} Kruskal's Answer</button>
+          <button class="btn danger" onclick="Game.showMenu()">Leave Room</button>
+        </div>
+        ${msg?`<div class="log-box"><div class="log-entry ${msgCls}">${msg}</div></div>`:''}
+      </div>`;
+  },
+  toggleHint() { this.showHint = !this.showHint; this.render(); }
+};
+
+// ==================================================================
+// ROOM 4: CHESS - Minimax with Alpha-Beta Pruning (4x4, 4-in-a-row)
+// ==================================================================
+const ChessRoom = {
+  board: [], N: 4, gameOver: false, aiThinking: false,
+  start() {
+    this.board = Array.from({length: this.N}, () => Array(this.N).fill('.'));
+    this.gameOver = false;
+    this.aiThinking = false;
+    this.render();
+  },
+  checkWinner(b) {
+    const N = this.N;
+    for (let i=0; i<N; i++) {
+      if (b[i][0] !== '.' && b[i].every(c => c === b[i][0])) return b[i][0];
+      const col = b.map(r => r[i]);
+      if (col[0] !== '.' && col.every(c => c === col[0])) return col[0];
+    }
+    const diag1 = [b[0][0], b[1][1], b[2][2], b[3][3]];
+    if (diag1[0] !== '.' && diag1.every(c => c === diag1[0])) return diag1[0];
+    const diag2 = [b[0][3], b[1][2], b[2][1], b[3][0]];
+    if (diag2[0] !== '.' && diag2.every(c => c === diag2[0])) return diag2[0];
+    return null;
+  },
+  isFull(b) { return b.every(row => row.every(c => c !== '.')); },
+  evaluate(b) {
+    const lineScore = (line) => {
+      let ai=0, pl=0;
+      for (const c of line) { if (c==='O') ai++; else if (c==='X') pl++; }
+      if (ai>0 && pl>0) return 0;
+      if (ai>0) return Math.pow(10, ai-1);
+      if (pl>0) return -Math.pow(10, pl-1);
+      return 0;
+    };
+    let s = 0;
+    for (let i=0; i<this.N; i++) {
+      s += lineScore(b[i]);
+      s += lineScore(b.map(r => r[i]));
+    }
+    s += lineScore([b[0][0], b[1][1], b[2][2], b[3][3]]);
+    s += lineScore([b[0][3], b[1][2], b[2][1], b[3][0]]);
+    return s;
+  },
+  // Minimax with alpha-beta pruning
+  minimax(b, depth, isMax, alpha, beta) {
+    const w = this.checkWinner(b);
+    if (w === 'O') return 1000 - depth;
+    if (w === 'X') return -1000 + depth;
+    if (this.isFull(b) || depth >= 4) return this.evaluate(b);
+    if (isMax) {
+      let best = -Infinity;
+      for (let i=0; i<this.N; i++) for (let j=0; j<this.N; j++) {
+        if (b[i][j] === '.') {
+          b[i][j] = 'O';
+          best = Math.max(best, this.minimax(b, depth+1, false, alpha, beta));
+          b[i][j] = '.';
+          alpha = Math.max(alpha, best);
+          if (beta <= alpha) return best;
+        }
+      }
+      return best;
+    } else {
+      let best = Infinity;
+      for (let i=0; i<this.N; i++) for (let j=0; j<this.N; j++) {
+        if (b[i][j] === '.') {
+          b[i][j] = 'X';
+          best = Math.min(best, this.minimax(b, depth+1, true, alpha, beta));
+          b[i][j] = '.';
+          beta = Math.min(beta, best);
+          if (beta <= alpha) return best;
+        }
+      }
+      return best;
+    }
+  },
+  findBestMove() {
+    let best = -Infinity, move = null;
+    for (let i=0; i<this.N; i++) for (let j=0; j<this.N; j++) {
+      if (this.board[i][j] === '.') {
+        this.board[i][j] = 'O';
+        const val = this.minimax(this.board, 0, false, -Infinity, Infinity);
+        this.board[i][j] = '.';
+        if (val > best) { best = val; move = [i, j]; }
+      }
+    }
+    return move;
+  },
+  playerMove(i, j) {
+    if (this.gameOver || this.aiThinking || this.board[i][j] !== '.') return;
+    this.board[i][j] = 'X';
+    if (this.checkGameEnd()) return;
+    this.aiThinking = true;
+    this.render();
+    setTimeout(() => {
+      const m = this.findBestMove();
+      if (m) this.board[m[0]][m[1]] = 'O';
+      this.aiThinking = false;
+      this.checkGameEnd();
+      this.render();
+    }, 650);
+  },
+  checkGameEnd() {
+    const w = this.checkWinner(this.board);
+    if (w === 'X') {
+      this.gameOver = true;
+      Game.completeRoom(3, 250, 100, "Dark Lord's Crown");
+      showModal("★ VICTORY! ★", "You defeated the Dark Lord!", 250, 100, "Dark Lord's Crown");
+      return true;
+    }
+    if (w === 'O') {
+      this.gameOver = true;
+      Game.player.hp = Math.max(0, Game.player.hp - 30);
+      Game.updateStats();
+      Game.completeRoom(3, 50, 0, null);
+      showModal("Defeated", "The Dark Lord wins this round... -30 HP", 50, 0, null);
+      return true;
+    }
+    if (this.isFull(this.board)) {
+      this.gameOver = true;
+      Game.completeRoom(3, 150, 40, null);
+      showModal("Draw!", "The Dark Lord retreats, wounded.", 150, 40, null);
+      return true;
+    }
+    return false;
+  },
+  render() {
+    const cells = [];
+    for (let i=0; i<this.N; i++) for (let j=0; j<this.N; j++) {
+      const c = this.board[i][j];
+      const isDark = (i+j) % 2 === 1;
+      const cls = c === 'X' ? 'x' : c === 'O' ? 'o' : '';
+      cells.push(`<div class="chess-cell ${isDark?'dark':''} ${cls} ${c!=='.'?'filled':''}"
+        onclick="ChessRoom.playerMove(${i},${j})">${c === '.' ? '' : c}</div>`);
+    }
+    document.getElementById('main').innerHTML = `
+      <div class="screen">
+        <h2>♟ Room 4: Dark Lord's Chessboard</h2>
+        <div class="room-info">
+          <b>Algorithm:</b> Minimax with Alpha-Beta Pruning<br>
+          <b>Data Structures:</b> 2D Board, Implicit Game Tree (recursion)<br>
+          <b>Time Complexity:</b> O(b^d) worst → O(b^(d/2)) with α-β pruning
+        </div>
+        <p style="color:var(--dim); text-align:center;">
+          Get <b>4 in a row</b> (horizontal, vertical, or diagonal) to win.<br>
+          You: <span style="color:var(--green); font-weight:bold">X</span> ·
+          Dark Lord: <span style="color:var(--red); font-weight:bold">O</span>
+        </p>
+        <div class="chess-board">${cells.join('')}</div>
+        <p style="text-align:center; color:var(--cyan); min-height:20px;">
+          ${this.aiThinking ? '🧠 The Dark Lord ponders darkly...' : this.gameOver ? '' : 'Your turn.'}
+        </p>
+        <div style="text-align:center; margin-top:15px;">
+          <button class="btn secondary" onclick="ChessRoom.start()">🔄 Reset Board</button>
+          <button class="btn danger" onclick="Game.showMenu()">Flee</button>
+        </div>
+      </div>`;
+  }
+};
+
+// ==================================================================
+// ROOM 5: SORTING HALL - Quick Sort (D&C) with visualization
+// ==================================================================
+const SortingRoom = {
+  scrolls: [], sorting: false, comparisons: 0, swaps: 0, pivot: -1, lo: -1, hi: -1, selected: -1,
+  start() {
+    const names = ["Fire", "Ice", "Wind", "Earth", "Light", "Shadow", "Bolt", "Water"];
+    const colors = ['#ff5566', '#4ddbff', '#e8ecf8', '#ffd54a', '#fffacd', '#b57bff', '#6ee787', '#5599ff'];
+    this.scrolls = names.map((n, i) => ({
+      power: 10 + Math.floor(Math.random() * 90),
+      name: n,
+      color: colors[i]
+    }));
+    this.sorting = false;
+    this.comparisons = 0;
+    this.swaps = 0;
+    this.pivot = -1;
+    this.lo = -1;
+    this.hi = -1;
+    this.selected = -1;
+    this.render();
+  },
+  click(i) {
+    if (this.sorting) return;
+    if (this.selected === -1) { this.selected = i; this.render(); }
+    else if (this.selected === i) { this.selected = -1; this.render(); }
+    else {
+      [this.scrolls[this.selected], this.scrolls[i]] = [this.scrolls[i], this.scrolls[this.selected]];
+      this.selected = -1;
+      this.render();
+    }
+  },
+  isSorted() {
+    for (let i=1; i<this.scrolls.length; i++)
+      if (this.scrolls[i-1].power > this.scrolls[i].power) return false;
+    return true;
+  },
+  checkSorted() {
+    if (this.isSorted()) {
+      Game.completeRoom(4, 200, 60, "Master Sorter's Badge");
+      showModal("★ Perfectly Sorted! ★",
+        "You sorted them yourself without using QuickSort! Massive bonus!",
+        200, 60, "Master Sorter's Badge");
+    } else {
+      this.render("Not sorted yet!", "fail");
+    }
+  },
+  async autoSort() {
+    if (this.sorting) return;
+    this.sorting = true;
+    this.comparisons = 0;
+    this.swaps = 0;
+    await this.quickSort(0, this.scrolls.length - 1);
+    this.lo = this.hi = this.pivot = -1;
+    this.sorting = false;
+    Game.completeRoom(4, 80, 30, null);
+    showModal("Sorted by QuickSort",
+      `Comparisons: <b>${this.comparisons}</b><br>Swaps: <b>${this.swaps}</b><br>(Less reward since the algorithm did it for you)`,
+      80, 30, null);
+  },
+  sleep(ms) { return new Promise(r => setTimeout(r, ms)); },
+  async quickSort(lo, hi) {
+    if (lo < hi) {
+      const p = await this.partition(lo, hi);
+      await this.quickSort(lo, p-1);
+      await this.quickSort(p+1, hi);
+    }
+  },
+  async partition(lo, hi) {
+    this.lo = lo; this.hi = hi; this.pivot = hi;
+    const pivot = this.scrolls[hi].power;
+    let i = lo - 1;
+    this.render(`Partitioning [${lo}..${hi}], pivot = ${pivot}`, "info");
+    await this.sleep(500);
+    for (let j = lo; j < hi; j++) {
+      this.comparisons++;
+      if (this.scrolls[j].power <= pivot) {
+        i++;
+        if (i !== j) {
+          [this.scrolls[i], this.scrolls[j]] = [this.scrolls[j], this.scrolls[i]];
+          this.swaps++;
+          this.render(`Swapping ${j} and ${i}`, "info");
+          await this.sleep(300);
+        }
+      }
+    }
+    [this.scrolls[i+1], this.scrolls[hi]] = [this.scrolls[hi], this.scrolls[i+1]];
+    this.swaps++;
+    this.pivot = i+1;
+    this.render(`Pivot placed at ${i+1}`, "success");
+    await this.sleep(400);
+    return i + 1;
+  },
+  render(msg = "", msgCls = "info") {
+    const scrolls = this.scrolls.map((s, i) => {
+      let cls = '';
+      if (i === this.selected) cls = 'selected';
+      else if (i === this.pivot) cls = 'pivot';
+      else if (i >= this.lo && i <= this.hi) cls = 'range';
+      return `<div class="scroll ${cls}" onclick="SortingRoom.click(${i})" style="border-color:${s.color}">
+        <div class="scroll-power" style="color:${s.color}">${s.power}</div>
+        <div class="scroll-name">${s.name}</div>
+      </div>`;
+    }).join('');
+    document.getElementById('main').innerHTML = `
+      <div class="screen">
+        <h2>📜 Room 5: The Sorting Hall</h2>
+        <div class="room-info">
+          <b>Algorithm:</b> Quick Sort (Divide & Conquer)<br>
+          <b>Data Structures:</b> Array, Recursion Stack<br>
+          <b>Time Complexity:</b> O(n log n) avg, O(n²) worst
+        </div>
+        <p style="color:var(--dim); text-align:center;">
+          Click two scrolls to swap them. Arrange in ascending order of power.<br>
+          <b>Self-sort = 200 pts</b> · <b>Auto QuickSort = 80 pts</b> (watch the partitions live!)
+        </p>
+        <div class="scrolls-row">${scrolls}</div>
+        <div style="text-align:center;">
+          Comparisons: <b>${this.comparisons}</b> · Swaps: <b>${this.swaps}</b>
+          ${this.pivot !== -1 ? `· Pivot: <b style="color:var(--accent2)">${this.scrolls[this.pivot].power}</b>`:''}
+        </div>
+        <div style="text-align:center; margin-top:15px;">
+          <button class="btn" onclick="SortingRoom.checkSorted()" ${this.sorting?'disabled':''}>✓ Check My Order (200pt)</button>
+          <button class="btn secondary" onclick="SortingRoom.autoSort()" ${this.sorting?'disabled':''}>⚡ Run QuickSort (80pt)</button>
+          <button class="btn danger" onclick="Game.showMenu()" ${this.sorting?'disabled':''}>Leave Room</button>
+        </div>
+        ${msg?`<div class="log-box"><div class="log-entry ${msgCls}">${msg}</div></div>`:''}
+      </div>`;
+  }
+};
+
+// ==================================================================
+// ROOM 6: ARCANE LOCK - N-Queens (Backtracking)
+// ==================================================================
+const LockRoom = {
+  N: 5, board: [], hintUsed: 0, solution: null,
+  start() {
+    this.board = Array.from({length: this.N}, () => Array(this.N).fill(0));
+    this.hintUsed = 0;
+    this.solution = Array.from({length: this.N}, () => Array(this.N).fill(0));
+    this.solve(this.solution, 0);
+    this.render();
+  },
+  isSafe(b, row, col) {
+    for (let i=0; i<row; i++) if (b[i][col]) return false;
+    for (let i=row, j=col; i>=0 && j>=0; i--, j--) if (b[i][j]) return false;
+    for (let i=row, j=col; i>=0 && j<this.N; i--, j++) if (b[i][j]) return false;
+    return true;
+  },
+  // Backtracking solve
+  solve(b, row) {
+    if (row === this.N) return true;
+    for (let col=0; col<this.N; col++) {
+      if (this.isSafe(b, row, col)) {
+        b[row][col] = 1;
+        if (this.solve(b, row+1)) return true;
+        b[row][col] = 0; // BACKTRACK
+      }
+    }
+    return false;
+  },
+  toggle(i, j) {
+    this.board[i][j] = this.board[i][j] ? 0 : 1;
+    this.render();
+  },
+  getConflicts() {
+    const conflicts = new Set();
+    const placed = [];
+    for (let i=0; i<this.N; i++) for (let j=0; j<this.N; j++)
+      if (this.board[i][j]) placed.push([i, j]);
+    for (let a=0; a<placed.length; a++) for (let b=a+1; b<placed.length; b++) {
+      const [r1,c1] = placed[a], [r2,c2] = placed[b];
+      if (r1===r2 || c1===c2 || Math.abs(r1-r2) === Math.abs(c1-c2)) {
+        conflicts.add(`${r1},${c1}`);
+        conflicts.add(`${r2},${c2}`);
+      }
+    }
+    return conflicts;
+  },
+  isValid() {
+    let count = 0;
+    for (let i=0; i<this.N; i++) for (let j=0; j<this.N; j++) if (this.board[i][j]) count++;
+    if (count !== this.N) return false;
+    return this.getConflicts().size === 0;
+  },
+  check() {
+    if (this.isValid()) {
+      const scoreGain = Math.max(100, 300 - this.hintUsed * 20);
+      Game.completeRoom(5, scoreGain, 100, "Master Key");
+      showModal("★ The Lock Opens! ★",
+        `The runes align! 5-Queens problem solved via Backtracking.`,
+        scoreGain, 100, "Master Key");
+    } else {
+      Game.player.hp = Math.max(0, Game.player.hp - 5);
+      Game.updateStats();
+      this.render("Runes clash! No two may share row, column, or diagonal. -5 HP", "fail");
+    }
+  },
+  giveHint() {
+    this.hintUsed++;
+    Game.player.score = Math.max(0, Game.player.score - 20);
+    Game.updateStats();
+    // Find a position in solution that's missing from board
+    for (let i=0; i<this.N; i++) for (let j=0; j<this.N; j++) {
+      if (this.solution[i][j] && !this.board[i][j]) {
+        this.render(`💡 Try placing a rune at row ${i}, col ${j}`, "info");
+        return;
+      }
+    }
+    this.render("You're on the right track!", "success");
+  },
+  render(msg = "", msgCls = "info") {
+    const conflicts = this.getConflicts();
+    const cells = [];
+    for (let i=0; i<this.N; i++) for (let j=0; j<this.N; j++) {
+      const isDark = (i+j) % 2 === 0;
+      const isRune = this.board[i][j] === 1;
+      const isConflict = conflicts.has(`${i},${j}`);
+      cells.push(`<div class="lock-cell ${isDark?'dark':''} ${isRune?'rune':''} ${isConflict?'conflict':''}"
+        onclick="LockRoom.toggle(${i},${j})">${isRune?'✦':''}</div>`);
+    }
+    let placed = 0;
+    for (let i=0; i<this.N; i++) for (let j=0; j<this.N; j++) if (this.board[i][j]) placed++;
+    document.getElementById('main').innerHTML = `
+      <div class="screen">
+        <h2>🗝 Room 6: The Arcane Lock</h2>
+        <div class="room-info">
+          <b>Algorithm:</b> N-Queens via Backtracking<br>
+          <b>Data Structures:</b> 2D Grid, Recursion Stack<br>
+          <b>Time Complexity:</b> O(N!) worst case — pruning drastically cuts it
+        </div>
+        <p style="color:var(--dim); text-align:center;">
+          Place <b>5 runes</b> on the 5×5 grid.<br>
+          <b>No two may share</b> a row, column, or diagonal. Conflicts shown in <span style="color:var(--red)">red</span>.
+        </p>
+        <div class="lock-grid">${cells.join('')}</div>
+        <p style="text-align:center;">Runes placed: <b>${placed}/5</b> · Hints used: <b>${this.hintUsed}</b></p>
+        <div style="text-align:center; margin-top:15px;">
+          <button class="btn" onclick="LockRoom.check()">🔓 Try to Open Lock</button>
+          <button class="btn secondary" onclick="LockRoom.giveHint()">💡 Hint (-20 score)</button>
+          <button class="btn secondary" onclick="LockRoom.start()">🔄 Reset</button>
+          <button class="btn danger" onclick="Game.showMenu()">Leave Room</button>
+        </div>
+        ${msg?`<div class="log-box"><div class="log-entry ${msgCls}">${msg}</div></div>`:''}
+      </div>`;
+  }
+};
+
+// ==================================================================
+// MODAL (shared reward popup)
+// ==================================================================
+function showModal(title, body, score, gold, item) {
+  const m = document.createElement('div');
+  m.className = 'modal-backdrop';
+  m.innerHTML = `
+    <div class="modal">
+      <h2>${title}</h2>
+      <div style="color:var(--dim); margin-bottom:15px;">${body}</div>
+      <div class="reward">
+        ${score ? `<div>📊 Score: <b style="color:var(--green)">+${score}</b></div>` : ''}
+        ${gold  ? `<div>💰 Gold: <b style="color:var(--accent)">+${gold}</b></div>` : ''}
+        ${item  ? `<div>🎁 Item: <b style="color:var(--cyan)">${item}</b></div>` : ''}
+      </div>
+      <button class="btn" onclick="this.closest('.modal-backdrop').remove(); Game.showMenu();">
+        Continue →
+      </button>
+    </div>`;
+  document.body.appendChild(m);
+}
+
+// KICK OFF
+Game.init();
+</script>
+
+
+</body></html>
